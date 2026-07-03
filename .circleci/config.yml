@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  browser-tools: circleci/browser-tools@1.5.3
 
 jobs:
   audit:
@@ -13,12 +11,11 @@ jobs:
 
   test:
     docker:
-      - image: cimg/node:lts-browsers
+      - image: cimg/node:lts
     steps:
-      - browser-tools/install-chrome
-      - browser-tools/install-firefox
       - checkout
       - run: npm ci
+      - run: npx playwright install --with-deps
       - run: npm run test
 
 workflows:

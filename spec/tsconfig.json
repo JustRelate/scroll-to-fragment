@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2015", "DOM"],
+    "noEmit": true,
+    "target": "ES2015",
+    "types": ["mocha"]
+  }
+}

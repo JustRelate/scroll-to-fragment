@@ -1,8 +1,9 @@
+import { expect } from "@esm-bundle/chai";
 import { scrollToFragment, stopScrollToFragment } from "../src/index";
 import { createBrowserHistory } from "history";
 
 describe("scrollToFragment", () => {
-  beforeEach((done) => {
+  beforeEach(async () => {
     document.body.innerHTML = "";
     document.body.insertAdjacentHTML(
       "beforeend",
@@ -18,140 +19,144 @@ describe("scrollToFragment", () => {
     );
     history.replaceState(null, "", "index.html");
     window.scrollTo(0, 333);
-    wait(done);
+    await wait();
   });
 
   afterEach(() => stopScrollToFragment());
 
   describe("stopScrollToFragment", () => {
-    let scrollIntoView: jasmine.Spy;
+    let wasCalled: boolean;
 
-    beforeEach((done) => {
-      scrollIntoView = jasmine.createSpy("scrollIntoView");
-      scrollToFragment({ scrollIntoView });
+    beforeEach(async () => {
+      wasCalled = false;
+      scrollToFragment({
+        scrollIntoView: () => {
+          wasCalled = true;
+        },
+      });
       stopScrollToFragment();
       document.getElementById("same")?.click();
-      wait(done);
+      await wait();
     });
 
     it("no longer calls the callback", () => {
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(wasCalled).to.be.false;
     });
   });
 
   describe("with a URL hash", () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       location.hash = "foobar";
       scrollToFragment();
-      wait(done);
+      await wait();
     });
 
     it("scrolls to the matching element", () => {
-      expect(window.scrollY).toBeCloseTo(10400, -3);
+      expect(window.scrollY).to.be.closeTo(10400, 1000);
     });
 
     describe("clicking a link to a different page", () => {
-      beforeEach((done) => {
+      beforeEach(async () => {
         window.scrollTo(0, 444);
         document.getElementById("other")?.click();
-        wait(done);
+        await wait();
       });
 
       it("keeps the scroll position unchanged", () => {
-        expect(window.scrollY).toBeCloseTo(444, -1);
+        expect(window.scrollY).to.be.closeTo(444, 10);
       });
     });
 
     describe("clicking a hash link to the same page", () => {
-      beforeEach((done) => {
+      beforeEach(async () => {
         window.scrollTo(0, 444);
         document.getElementById("same")?.click();
-        wait(done);
+        await wait();
       });
 
       it("scrolls to the matching element", () => {
-        expect(window.scrollY).toBeCloseTo(10400, -3);
+        expect(window.scrollY).to.be.closeTo(10400, 1000);
       });
     });
 
     describe("clicking a hash link with defaultPrevented", () => {
-      const listener = (event) => {
+      const listener = (event: Event) => {
         const id = (event.target as Element).id;
         if (id === "same") event.preventDefault();
       };
 
-      beforeEach((done) => {
+      beforeEach(async () => {
         window.scrollTo(0, 444);
         document.addEventListener("click", listener);
         document.getElementById("same")?.click();
-        wait(done);
+        await wait();
       });
 
       afterEach(() => document.removeEventListener("click", listener));
 
       it("keeps the scroll position unchanged", () => {
-        expect(window.scrollY).toBeCloseTo(444, -1);
+        expect(window.scrollY).to.be.closeTo(444, 10);
       });
     });
   });
 
   describe("with a URL hash but no matching fragment", () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       history.replaceState(null, "", "index.html#barbaz");
       scrollToFragment();
-      wait(done);
+      await wait();
     });
 
     it("keeps the scroll position unchanged", () => {
-      expect(window.scrollY).toBeCloseTo(333, -1);
+      expect(window.scrollY).to.be.closeTo(333, 10);
     });
 
     describe("if the fragment appears later", () => {
-      beforeEach((done) => {
+      beforeEach(async () => {
         document
           .getElementById("bottom10400")
           ?.insertAdjacentHTML("beforebegin", "<h1 id='barbaz'>H1</h1>");
-        wait(done);
+        await wait();
       });
 
       it("scrolls to the matching element", () => {
-        expect(window.scrollY).toBeCloseTo(10400, -3);
+        expect(window.scrollY).to.be.closeTo(10400, 1000);
       });
     });
   });
 
   describe("clicking an element wrapped by a hash link", () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       scrollToFragment({ scrollIntoView: () => window.scrollTo(0, 123) });
       document.getElementById("spanInA")?.click();
-      wait(done);
+      await wait();
     });
 
     it("scrolls, overriding the browser default", () => {
-      expect(window.scrollY).toBeCloseTo(123, -1);
+      expect(window.scrollY).to.be.closeTo(123, 10);
     });
   });
 
   describe("without a URL hash", () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       scrollToFragment();
-      wait(done);
+      await wait();
     });
 
     it("keeps the scroll position unchanged", () => {
-      expect(window.scrollY).toBeCloseTo(333, -1);
+      expect(window.scrollY).to.be.closeTo(333, 10);
     });
   });
 
   describe("with scrollIntoView", () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       scrollToFragment({ scrollIntoView: () => window.scrollTo(0, 123) });
       document.getElementById("hashOnly")?.click();
-      wait(done);
+      await wait();
     });
 
     it("scrolls according to the callback, overriding the browser default", () => {
-      expect(window.scrollY).toBeCloseTo(123, -1);
+      expect(window.scrollY).to.be.closeTo(123, 10);
     });
   });
 
@@ -161,35 +166,40 @@ describe("scrollToFragment", () => {
     });
 
     describe("on click", () => {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         scrollToFragment({
           history: this.history,
           scrollIntoView: () => window.scrollTo(0, 123),
         });
         document.getElementById("hashOnly")?.click();
-        wait(done);
+        await wait();
       });
 
       it("scrolls, overriding the browser default", () => {
-        expect(window.scrollY).toBeCloseTo(123, -1);
+        expect(window.scrollY).to.be.closeTo(123, 10);
       });
     });
 
     describe("on PUSH", () => {
-      beforeEach(function (done) {
+      beforeEach(async function () {
         scrollToFragment({ history: this.history });
         this.history.push("other.html#bottom10400");
-        wait(done);
+        await wait();
       });
 
       it("scrolls to the matching element", () => {
-        expect(window.scrollY).toBeCloseTo(10400, -3);
+        expect(window.scrollY).to.be.closeTo(10400, 1000);
       });
     });
   });
 });
 
-function wait(done: () => void, frames: number = 3) {
-  if (frames === 0) done();
-  else requestAnimationFrame(() => wait(done, frames - 1));
+function wait(frames = 3): Promise<void> {
+  return new Promise((resolve) => {
+    function tick(n: number) {
+      if (n === 0) resolve();
+      else requestAnimationFrame(() => tick(n - 1));
+    }
+    tick(frames);
+  });
 }
