@@ -1,7 +1,7 @@
 import type * as History from "history";
 
 interface Options {
-  getElement?: (fragmentId: string) => Element | undefined;
+  getElement?: (fragmentId: string) => Element | null | undefined;
   history?: History.History;
   scrollIntoView?: (element: Element) => void;
 }
@@ -63,10 +63,12 @@ function handleHistoryPush(
   action: History.Action,
 ): void; // history version 4
 function handleHistoryPush(
-  update: History.Update & History.Location,
+  update: History.Update | History.Location,
   action?: History.Action,
 ) {
-  if ("PUSH" === (action || update.action)) startObserving();
+  if ("PUSH" === ("action" in update ? update.action : action)) {
+    startObserving();
+  }
 }
 
 function handleDocumentClick(event: Event) {
@@ -78,7 +80,7 @@ function handleDocumentClick(event: Event) {
 }
 
 function closestAIncludingSelf(element?: HTMLElement) {
-  let target = element;
+  let target: HTMLElement | null | undefined = element;
   while (target && target.nodeName !== "A") target = target.parentElement;
   return target as HTMLAnchorElement | void;
 }
@@ -113,14 +115,14 @@ function throttle(callback: () => void) {
   throttleRequestId = requestAnimationFrame(callback);
 }
 
-let getElement: Options["getElement"];
+let getElement: NonNullable<Options["getElement"]>;
 let history: Options["history"];
-let scrollIntoView: Options["scrollIntoView"];
+let scrollIntoView: NonNullable<Options["scrollIntoView"]>;
 
-let unlistenHistory: () => void | undefined;
+let unlistenHistory: (() => void) | undefined;
 let documentObserver: MutationObserver | undefined;
 let observeTimeout: ReturnType<typeof setTimeout> | undefined;
-let throttleRequestId: ReturnType<typeof requestAnimationFrame> | undefined;
+let throttleRequestId = 0;
 
 const OBSERVER_CONFIG = {
   attributes: true,
