@@ -6,7 +6,7 @@ interface Options {
   scrollIntoView?: (element: Element) => void;
 }
 
-export function scrollToFragment(options: Options = {}) {
+export function scrollToFragment(options: Options = {}): void {
   stopScrollToFragment();
 
   getElement = options.getElement || getElementById;
@@ -23,7 +23,7 @@ function startScrollToFragment() {
   startObserving();
 }
 
-export function stopScrollToFragment() {
+export function stopScrollToFragment(): void {
   stopObserving();
   removeEventListener("click", handleDocumentClick);
   if (unlistenHistory) unlistenHistory();
