@@ -11,8 +11,8 @@
     "@web/test-runner": "^1.0.0",
     "@web/test-runner-playwright": "^1.0.0",
     "history": "^5.3.0",
-    "prettier": "^3.5.3",
-    "typescript": "7.0"
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2"
   },
   "files": [
     "dist",
@@ -40,7 +40,7 @@
     "url": "git+https://github.com/JustRelate/scroll-to-fragment.git"
   },
   "scripts": {
-    "build": "tsc && tsc --outDir dist/esm --target ES6 --declaration false",
+    "build": "tsc && tsc --outDir dist/esm --module ES2015 --declaration false",
     "prepublishOnly": "rm -rf dist && npm test && npm run build",
     "test": "web-test-runner",
     "watch": "web-test-runner --watch"
